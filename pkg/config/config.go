@@ -12,4 +12,6 @@ type Config struct {
 	DeprecationWarningDays int `json:"deprecation_warning_days"`
 	DeletionWarningDays int `json:"deletion_warning_days"`
 	DatabaseBucket string `json:"database_bucket"`
+	ElasticsearchEndpoint string `json:"elasticsearch_endpoint"`
+	ElasticsearchIndex string `json:"elasticsearch_index"`
 }

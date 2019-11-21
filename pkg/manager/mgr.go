@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/securityclippy/gedb/pkg/db"
 	"github.com/securityclippy/snyker/pkg/snykclient"
+	"github.com/securityclippy/esc"
 	"sync"
 )
 
@@ -22,6 +23,7 @@ type Manager struct {
 	Config *config.Config
 	DB *db.GEDB
 	Snk *snykclient.SnykClient
+	ESC *esc.ESC
 }
 
 func NewManager(dhUsername, dhPassword, snykToken string, conf *config.Config) *Manager {
@@ -49,6 +51,8 @@ func NewManager(dhUsername, dhPassword, snykToken string, conf *config.Config) *
 	if err != nil {
 		log.Error("could not connect to DB.  Continuing without db support")
 	}
+
+	esClient := esc.NewAWS(conf.ElasticsearchEndpoint)
 	m := &Manager{
 		Log:log,
 		ECR:ecrClient,
@@ -57,6 +61,7 @@ func NewManager(dhUsername, dhPassword, snykToken string, conf *config.Config) *
 		Config:conf,
 		DB: dataStore,
 		Snk: snyk,
+		ESC:esClient,
 	}
 
 	return m
