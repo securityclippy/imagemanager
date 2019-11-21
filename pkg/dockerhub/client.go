@@ -84,7 +84,11 @@ func (c *Client) GetAuthToken() (token string, err error) {
 		return "", err
 	}
 	c.AuthToken = tokenResp.Token
-	return "", nil
+	if tokenResp.Token == "" {
+		fmt.Println("authentication failed")
+	}
+
+	return tokenResp.Token, nil
 }
 
 func (c *Client) NewRequest(method, url string, payload io.Reader) (*http.Request, error) {
@@ -104,6 +108,26 @@ func (c *Client) NewRequest(method, url string, payload io.Reader) (*http.Reques
 	req.Header = header
 	//req.Header.Set("Authorization", fmt.Sprintf("JWT %s", c.AuthToken))
 	return req, nil
+}
+
+func (c *Client) doRequest(method, url string, payload io.Reader) (data []byte, status int, err error) {
+	req, err := c.NewRequest(method, url, payload)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	if err != nil {
+		return nil,0,  err
+	}
+
+	return body, resp.StatusCode, nil
 }
 
 func (c *Client) Catalog() error {
@@ -127,126 +151,8 @@ func (c *Client) Catalog() error {
 	return nil
 }
 
-func (c *Client) ListRepositories() (repos []*Repository, err error) {
-	repos = []*Repository{}
-	output, err := c.listRepositoriesRequest("")
-	if err != nil {
-		return nil, err
-	}
 
-	//fmt.Printf("next: %s\n", output.Next)
 
-	repos = append(repos, output.Results...)
-
-	next := output.Next
-	for {
-		if next == "" {
-			return repos, nil
-		}
-		output, err := c.listRepositoriesRequest(next)
-		if err != nil {
-			return nil, err
-		}
-		next = output.Next
-		repos = append(repos, output.Results...)
-	}
-}
-
-func (c *Client) listRepositoriesRequest(next string) (*RepositoryOutput, error) {
-	baseURL := "https://hub.docker.com/v2/repositories/segment/?page=1&page_size=100"
-	var url string
-	if next != "" {
-		url = fmt.Sprint(next)
-	} else {
-		url = baseURL
-	}
-
-	req, err := c.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := c.Client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
-
-	if err != nil {
-		return nil, err
-	}
-
-	output := &RepositoryOutput{}
-
-	err = json.Unmarshal(body, output)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func (c *Client) ListTags(imageName string) (tags []*Tag, err error) {
-	tags = []*Tag{}
-	output, err := c.listImageTags(imageName, "")
-	if err != nil {
-		return nil, err
-	}
-
-	tags = append(tags, output.Results...)
-	next := output.Next
-
-	for {
-		if next == "" {
-			return tags, nil
-		}
-		output, err := c.listImageTags(imageName, next)
-		if err != nil {
-			return nil, err
-		}
-
-		tags = append(tags, output.Results...)
-		next = output.Next
-	}
-}
-
-func (c *Client) listImageTags(image, next string) (output *TagOutput, err error) {
-	baseURL := fmt.Sprintf("https://hub.docker.com/v2/repositories/segment/%s/tags/?page_size=100", image)
-	var url string
-	if next != "" {
-		url = next
-	} else {
-		url = baseURL
-	}
-
-	req, err := c.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := c.Client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
-
-	if err != nil {
-		return nil, err
-	}
-
-	output = &TagOutput{}
-
-	err = json.Unmarshal(body, &output)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
 
 func (c *Client) GetManifest(image, tag string) (string, error) {
 	url := fmt.Sprintf("https://hub.docker.com/v2/repositories/segment/%s/manifests/%s", image, tag)
@@ -267,35 +173,6 @@ func (c *Client) GetManifest(image, tag string) (string, error) {
 	return "", nil
 }
 
-func (c *Client) DeleteTag(image, tag string) error {
-	//DELETE "$PROTO$REG/v2/$repo/manifests/$digest"
-	url := fmt.Sprintf("https://hub.docker.com/v2/repositories/segment/%s/tags/%s/", image, tag)
-	req, err := c.NewRequest("DELETE", url, nil)
-	if err != nil {
-		return err
-	}
-	resp, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != 204 {
-		return fmt.Errorf("%s", resp.Status)
-	}
-	return nil
-}
-
-func (c Client) MostRecentTag(tags []*Tag) (tag *Tag) {
-	if len(tags) > 0 {
-		tag = tags[0]
-		for _, t := range tags {
-			if t.LastUpdated.After(tag.LastUpdated.UTC()) {
-				tag = t
-			}
-		}
-		return tag
-	}
-	return nil
-}
 
 
 

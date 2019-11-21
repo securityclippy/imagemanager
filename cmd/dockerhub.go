@@ -17,7 +17,6 @@ package cmd
 import (
 	//"github.com/securityclippy/imagemanager/pkg/dockerhub"
 
-	"github.com/securityclippy/imagemanager/pkg/manager"
 	"github.com/spf13/cobra"
 )
 
@@ -32,12 +31,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		m := manager.NewManager("matthew.jane@segment.com", "tum2d3J6L7sWpRjpePwwDna4", "f977944a-e11c-4ef2-89f8-acfd3581ae08")
-
-		err := m.UpdateDockerhub(20)
-		if err != nil {
-			log.Fatal(err)
-		}
+		cmd.Usage()
 	},
 }
 

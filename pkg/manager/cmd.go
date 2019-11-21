@@ -3,10 +3,9 @@ package manager
 import (
 	"bufio"
 	"github.com/pkg/errors"
+	"fmt"
 	"os/exec"
 	"strings"
-	log "github.com/sirupsen/logrus"
-
 )
 
 
@@ -32,7 +31,7 @@ func runCMD(command string, cmdArgs, outputFilters []string) error {
 				}
 				return false
 			}() {
-				log.Infof("[%s] %s\n", command, text)
+				fmt.Printf("[%s] %s\n", command, text)
 			}
 		}
 	}()

@@ -15,17 +15,29 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/securityclippy/imagemanager/pkg/config"
+	"github.com/securityclippy/imagemanager/pkg/dockerhub"
+	"github.com/securityclippy/imagemanager/pkg/manager"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"os"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
 var log *logrus.Logger
+
+var DH *dockerhub.Client
+var SNYKTOKEN string
+var DHUSERNAME string
+var DHPASSWORD string
+var Mgr *manager.Manager
+
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -86,7 +98,26 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal(err)
 	}
+	fmt.Println("Using config file:", viper.ConfigFileUsed())
+
+	data, err := ioutil.ReadFile(viper.ConfigFileUsed())
+	if err != nil {
+		log.Fatal(err)
+	}
+	conf := &config.Config{}
+
+	err = json.Unmarshal(data, conf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	SNYKTOKEN = os.Getenv("SNYK_TOKEN")
+	DHUSERNAME = os.Getenv("DH_USERNAME")
+	DHPASSWORD = os.Getenv("DH_PASSWORD")
+	Mgr = manager.NewManager(DHUSERNAME, DHPASSWORD, SNYKTOKEN, conf)
+
 }

@@ -15,14 +15,13 @@
 package cmd
 
 import (
-	"github.com/securityclippy/imagemanager/pkg/manager"
-
+	"fmt"
 	"github.com/spf13/cobra"
 )
 
-// listTagsCmd represents the listTags command
-var listTagsCmd = &cobra.Command{
-	Use:   "list-tags",
+// pullCmd represents the pull command
+var pullCmd = &cobra.Command{
+	Use:   "pull",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -31,22 +30,22 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		m := manager.NewManager("matthew.jane@segment.com", "tum2d3J6L7sWpRjpePwwDna4", "f977944a-e11c-4ef2-89f8-acfd3581ae08")
+		//dhc := manager.DockerHubClient(DHUSERNAME, DHPASSWORD, "index.docker.io")
 
-		m.ListTags("schema-service-mysql")
+		fmt.Println("pull called")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(listTagsCmd)
+	dockerhubCmd.AddCommand(pullCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// listTagsCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// pullCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// listTagsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// pullCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

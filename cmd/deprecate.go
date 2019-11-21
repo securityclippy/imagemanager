@@ -15,8 +15,6 @@
 package cmd
 
 import (
-	"github.com/securityclippy/imagemanager/pkg/manager"
-
 	"github.com/spf13/cobra"
 )
 
@@ -33,8 +31,8 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		m := manager.NewManager("", "", "f977944a-e11c-4ef2-89f8-acfd3581ae08")
-		err := m.Deprecate(imageName)
+
+		err := Mgr.Deprecate(imageName)
 		if err != nil {
 			log.Fatal(err)
 		}

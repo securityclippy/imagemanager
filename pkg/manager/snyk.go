@@ -1,13 +1,17 @@
 package manager
 
 
-func (m Manager) SnykMonitorDocker(imageName string) error {
+func (m Manager) SnykMonitorDocker(imageName string, verbose bool) error {
 	args := []string{
 		"monitor",
 		"--docker",
 		imageName,
 	}
-	return runCMD("snyk", args, nil)
+	if verbose {
+		return runCMD("snyk", args, nil)
+	}
+	return runCMD("snyk", args, []string{"alongstringthatshouldnevermatch"})
+
 }
 
 

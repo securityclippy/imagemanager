@@ -1,0 +1,8 @@
+{
+  "dockerhub_org": "segmentio",
+  "deprecation_threshold_days": 180,
+  "deletion_threshold_days": 200,
+  "slack_channel": "cloudsec_testing",
+  "deprecation_warning_days": 14,
+  "database_bucket": "clippy-gedb"
+}

@@ -16,12 +16,13 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+    "github.com/schollz/progressbar/v2"
+
 )
 
-// deprecateDockerhubCmd represents the deprecateDockerhub command
-var threads int
-var deprecateDockerhubCmd = &cobra.Command{
-	Use:   "deprecate-dockerhub",
+// dockerhubCleanupCmd represents the dockerhubCleanup command
+var dockerhubCleanupCmd = &cobra.Command{
+	Use:   "clean",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -31,27 +32,37 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		err := Mgr.DeprecateDockerhub(imageName, threads); if err != nil {
-			log.Fatal(err)
-		} else {
-			log.Infof("Deprecated: %s", imageName)
+
+		repos, err := Mgr.Hub.ListRepositories()
+		if err != nil {
+			Mgr.Log.Fatal(err)
+		}
+
+		bar := progressbar.New(len(repos))
+		for _, repo := range repos {
+			bar.Add(1)
+			if repo != nil {
+
+				err := Mgr.CleanDockerhubRepo(repo)
+				if err != nil {
+					Mgr.Log.Error(err)
+				}
+			}
+
 		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(deprecateDockerhubCmd)
-	deprecateDockerhubCmd.Flags().StringVarP(&imageName, "image", "i", "", "image")
-	deprecateDockerhubCmd.MarkFlagRequired("image")
-	deprecateDockerhubCmd.Flags().IntVarP(&threads, "threads", "t", 1, "threads")
+	dockerhubCmd.AddCommand(dockerhubCleanupCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// deprecateDockerhubCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// dockerhubCleanupCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// deprecateDockerhubCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// dockerhubCleanupCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

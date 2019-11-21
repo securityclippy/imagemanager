@@ -15,13 +15,14 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-// deprecateDockerhubCmd represents the deprecateDockerhub command
-var threads int
-var deprecateDockerhubCmd = &cobra.Command{
-	Use:   "deprecate-dockerhub",
+// updateSnykCmd represents the updateSnyk command
+var updateSnykCmd = &cobra.Command{
+	Use:   "update-snyk",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -30,28 +31,20 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		err := Mgr.DeprecateDockerhub(imageName, threads); if err != nil {
-			log.Fatal(err)
-		} else {
-			log.Infof("Deprecated: %s", imageName)
-		}
+		fmt.Println("updateSnyk called")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(deprecateDockerhubCmd)
-	deprecateDockerhubCmd.Flags().StringVarP(&imageName, "image", "i", "", "image")
-	deprecateDockerhubCmd.MarkFlagRequired("image")
-	deprecateDockerhubCmd.Flags().IntVarP(&threads, "threads", "t", 1, "threads")
+	rootCmd.AddCommand(updateSnykCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// deprecateDockerhubCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// updateSnykCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// deprecateDockerhubCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// updateSnykCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

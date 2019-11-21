@@ -2,29 +2,37 @@ package manager
 
 import (
 	"fmt"
+	"github.com/securityclippy/imagemanager/pkg/config"
+	"github.com/securityclippy/imagemanager/pkg/dockerhub"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/securityclippy/imagemanager/pkg/dockerhub"
+	"github.com/segmentio/cloudsec-bot/pkg/bot"
+	"github.com/sirupsen/logrus"
+	"github.com/securityclippy/gedb/pkg/db"
 	"github.com/securityclippy/snyker/pkg/snykclient"
-	log "github.com/sirupsen/logrus"
 	"sync"
 )
 
 type Manager struct {
+	Log *logrus.Logger
 	ECR *ecr.ECR
 	Hub *dockerhub.Client
+	Bot *bot.Bot
+	Config *config.Config
+	DB *db.GEDB
 	Snk *snykclient.SnykClient
 }
 
-func NewManager(dhUsername, dhPassword, snykToken string) *Manager {
+func NewManager(dhUsername, dhPassword, snykToken string, conf *config.Config) *Manager {
+	log := logrus.New()
 	cfg := aws.NewConfig()
 	sess, err := session.NewSession(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client := ecr.New(sess)
+	ecrClient := ecr.New(sess)
 
 	hub := dockerhub.NewClient(dhUsername, dhPassword, "", "")
 	_, err = hub.GetAuthToken()
@@ -32,10 +40,22 @@ func NewManager(dhUsername, dhPassword, snykToken string) *Manager {
 		log.Fatal(err)
 	}
 
-	snyk := snykclient.NewSnykClient(snykToken)
+	snyk, err := snykclient.NewSnykClient(snykToken)
+	if err != nil {
+		log.Error("could not create snyk client")
+	}
+
+	dataStore, err := db.NewS3("prefix", conf.DatabaseBucket)
+	if err != nil {
+		log.Error("could not connect to DB.  Continuing without db support")
+	}
 	m := &Manager{
-		ECR:client,
+		Log:log,
+		ECR:ecrClient,
 		Hub: hub,
+		Bot: bot.NewBetaBot(),
+		Config:conf,
+		DB: dataStore,
 		Snk: snyk,
 	}
 
@@ -103,39 +123,6 @@ func (m Manager) ListImageIds(repo *ecr.Repository) (imageIds []*ecr.ImageIdenti
 	return imageIds, nil
 }
 
-func (m Manager) DescribeImages(imageIds []*ecr.ImageIdentifier, repo *ecr.Repository) (images []*ecr.ImageDetail, err error) {
-	maxResults := 500
-	images = []*ecr.ImageDetail{}
-	input := &ecr.DescribeImagesInput{
-		MaxResults: aws.Int64(int64(maxResults)),
-		RegistryId: repo.RegistryId,
-		RepositoryName:repo.RepositoryName,
-	}
-	result, err := m.ECR.DescribeImages(input)
-	if err != nil {
-		return nil, err
-	}
-
-	images = append(images, result.ImageDetails...)
-
-	for {
-		if len(result.ImageDetails) < maxResults {
-			//images = append(images, result.ImageDetails...)
-			return images, nil
-		}
-		input := &ecr.DescribeImagesInput{
-			MaxResults: aws.Int64(int64(maxResults)),
-			RegistryId: repo.RegistryId,
-			RepositoryName:repo.RepositoryName,
-			NextToken: result.NextToken,
-		}
-		result, err = m.ECR.DescribeImages(input)
-		if err != nil {
-			return nil, err
-		}
-		images = append(images, result.ImageDetails...)
-	}
-}
 
 func (m Manager) LatestImage(images []*ecr.ImageDetail) (latest *ecr.ImageDetail, err error) {
 	latest = images[0]
@@ -151,72 +138,11 @@ func (m Manager) LatestImage(images []*ecr.ImageDetail) (latest *ecr.ImageDetail
 }
 
 
-func (m Manager) UpdateECR(start, finish, threads int) error {
-	repos, err := m.DescribeRepositories()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if finish == 0 {
-		finish = len(repos)
-	}
-	log.Infof("Found: %d repos", len(repos))
-	rlChan := make(chan int, threads)
-	wg := sync.WaitGroup{}
-	repoStream := make(chan *ecr.Repository, threads)
-	for i, r := range repos[start:finish] {
-		rlChan <- 1
-		wg.Add(1)
-		repoStream <- r
-		go func() {
-			defer wg.Done()
-			repo := <- repoStream
-			images, err := m.DescribeImages(nil, repo)
-			if err != nil {
-				log.Error(err)
-			}
-			log.Infof("%s: has %d images", *repo.RepositoryName, len(images))
-			if len(images) > 0 {
-				latest, err := m.LatestImage(images)
-				if err != nil {
-					log.Error(err)
-				}
-				//log.Infof("latest: %+v", latest)
-				imageWithTag := ""
-				if len(latest.ImageTags) > 0 {
-					imageWithTag = fmt.Sprintf("%s:%s", *repo.RepositoryUri, *latest.ImageTags[0])
-				} else {
-					imageWithTag = *repo.RepositoryUri
-				}
-				//log.Infof("latest w/tags: %s", imageWithTag)
-				err = m.DockerPull(imageWithTag, false)
-				if err != nil {
-					log.Error(err)
-				}
-
-				err = m.SnykMonitorDocker(imageWithTag)
-				if err != nil {
-					log.Error(err)
-				}
-
-				err = m.DockerRMI(imageWithTag)
-				if err != nil {
-					log.Error(err)
-				}
-				log.Infof("Finished: [%d]", i)
-			}
-			<- rlChan
-		}()
-
-	}
-	close(rlChan)
-	wg.Wait()
-	return nil
-}
 
 func (m *Manager) UpdateDockerhub(threads int) error {
 
 	repos, err := m.Hub.ListRepositories()
-	log.Infof("Got: %d repos", len(repos))
+	m.Log.Infof("Got: %d repos", len(repos))
 	if err != nil {
 		return err
 	}
@@ -232,7 +158,7 @@ func (m *Manager) UpdateDockerhub(threads int) error {
 			rp := <- repoStream
 			tags, err := m.Hub.ListTags(rp.Name)
 			if err != nil {
-				log.Error(err)
+				m.Log.Error(err)
 			}
 
 			latest := m.Hub.MostRecentTag(tags)
@@ -247,17 +173,17 @@ func (m *Manager) UpdateDockerhub(threads int) error {
 
 				err = m.DockerPull(image, false)
 				if err != nil {
-					log.Error(err)
+					m.Log.Error(err)
 				}
 
-				err = m.SnykMonitorDocker(image)
+				err = m.SnykMonitorDocker(image, false)
 				if err != nil {
-					log.Error(err)
+					m.Log.Error(err)
 				}
 
 				err = m.DockerRMI(image)
 				if err != nil {
-					log.Error(err)
+					m.Log.Error(err)
 				}
 				fmt.Printf("finished: %d", <- rlChan)
 
