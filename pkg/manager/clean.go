@@ -43,9 +43,10 @@ func (m *Manager) CleanDockerhubRepo(repo *dockerhub.Repository) error {
 		// if zero, not marked for dep yet
 		if rr.DaysSinceDeprecationMark() == -1 {
 			rr.MarkForDeprecation()
-			m.Bot.Log.Infof("[%s/%s] marked for deprecation \n " +
-				"Last Updated: %d days ago (%.2f years)",
-				repo.Namespace, repo.Name, rr.DaysSinceLastUpdate(), (float64(rr.DaysSinceLastUpdate())/float64(365)))
+			//TODO add better slack integration
+			//m.Bot.Log.Infof("[%s/%s] marked for deprecation \n " +
+				//"Last Updated: %d days ago (%.2f years)",
+				//repo.Namespace, repo.Name, rr.DaysSinceLastUpdate(), (float64(rr.DaysSinceLastUpdate())/float64(365)))
 			err := m.ESC.UpsertInterface(rr, m.Config.ElasticsearchIndex)
 			if err != nil {
 				m.Log.Error(err)
@@ -58,9 +59,10 @@ func (m *Manager) CleanDockerhubRepo(repo *dockerhub.Repository) error {
 		}
 
 		if rr.DaysSinceDeprecationMark() <= m.Config.DeprecationWarningDays {
-			m.Bot.Log.Infof("[%s/%s] %d days till deprecation \n " +
-				"Last Updated: %d days ago (%.2f years)",
-				repo.Namespace, repo.Name, rr.DaysToDeprecationDate(), rr.DaysSinceLastUpdate(), (float64(rr.DaysSinceLastUpdate())/float64(365)))
+			//TODO better slack integration
+			//m.Bot.Log.Infof("[%s/%s] %d days till deprecation \n " +
+				//"Last Updated: %d days ago (%.2f years)",
+				//repo.Namespace, repo.Name, rr.DaysToDeprecationDate(), rr.DaysSinceLastUpdate(), (float64(rr.DaysSinceLastUpdate())/float64(365)))
 			return nil
 		}
 
@@ -71,8 +73,9 @@ func (m *Manager) CleanDockerhubRepo(repo *dockerhub.Repository) error {
 				return err
 			}
 			rr.Deprecated = true
-			m.Bot.Log.Infof("[%s/%s] deprecated", repo.Namespace, repo.Name)
-			m.Bot.Log.Infof("[%s/%s] days to deletion: %d", rr.DaysToDeletionDate())
+			//TODO
+			//m.Bot.Log.Infof("[%s/%s] deprecated", repo.Namespace, repo.Name)
+			//m.Bot.Log.Infof("[%s/%s] days to deletion: %d", rr.DaysToDeletionDate())
 			err := m.ESC.UpsertInterface(rr, m.Config.ElasticsearchIndex)
 			if err != nil {
 				m.Log.Error(err)
@@ -85,12 +88,13 @@ func (m *Manager) CleanDockerhubRepo(repo *dockerhub.Repository) error {
 		}
 
 		if rr.DaysToDeletionDate() > 0 {
-			m.Bot.Log.Infof("[%s/%s] days to deletion: %d", rr.DaysToDeletionDate())
+			//TODO
+			//m.Bot.Log.Infof("[%s/%s] days to deletion: %d", rr.DaysToDeletionDate())
 			return nil
 		}
 
 		//delete
-		m.Bot.Log.Infof("[%s/%s] days to deleted")
+		//m.Bot.Log.Infof("[%s/%s] days to deleted")
 
 		err = m.Hub.DeleteRepository(repo)
 		if err != nil {

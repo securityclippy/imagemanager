@@ -7,24 +7,69 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/segmentio/cloudsec-bot/pkg/bot"
+	"github.com/securityclippy/imagemanager/pkg/registry"
+	"github.com/aquasecurity/fanal/cache"
+	"os"
+	ospkgScanner "github.com/aquasecurity/trivy/pkg/scanner/ospkg"
+
+	ospkgDetector "github.com/aquasecurity/trivy/pkg/detector/ospkg"
+
+	libScanner "github.com/aquasecurity/trivy/pkg/scanner/library"
+	libDetector "github.com/aquasecurity/trivy/pkg/detector/library"
+
+
+
+
+
+	//"github.com/segmentio/cloudsec-bot/pkg/bot"
 	"github.com/sirupsen/logrus"
 	"github.com/securityclippy/gedb/pkg/db"
 	"github.com/securityclippy/snyker/pkg/snykclient"
 	"github.com/securityclippy/esc"
 	"sync"
+	"github.com/aquasecurity/trivy/pkg/scanner"
 )
 
+var trivyScanner scanner.Scanner
+
+func init() {
+	log := logrus.New()
+	// init cache
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	cacheClient := cache.Initialize(wd)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//osPkgScanner init
+	osPkgscan := ospkgScanner.NewScanner(ospkgDetector.Detector{})
+
+
+	//libScan init
+	libScan := libScanner.NewScanner(libDetector.Detector{})
+
+
+	//
+	trivyScanner = scanner.NewScanner(cacheClient, osPkgscan, libScan)
+}
+
 type Manager struct {
+	TrivyScanner scanner.Scanner
+	Plugins []registry.RegistryPlugin
 	Log *logrus.Logger
 	ECR *ecr.ECR
 	Hub *dockerhub.Client
-	Bot *bot.Bot
+	//Bot *bot.Bot
 	Config *config.Config
 	DB *db.GEDB
 	Snk *snykclient.SnykClient
 	ESC *esc.ESC
 }
+
 
 func NewManager(dhUsername, dhPassword, snykToken string, conf *config.Config) *Manager {
 	log := logrus.New()
@@ -54,10 +99,11 @@ func NewManager(dhUsername, dhPassword, snykToken string, conf *config.Config) *
 
 	esClient := esc.NewAWS(conf.ElasticsearchEndpoint)
 	m := &Manager{
+		TrivyScanner:trivyScanner,
 		Log:log,
 		ECR:ecrClient,
 		Hub: hub,
-		Bot: bot.NewBetaBot(),
+		//Bot: bot.NewBetaBot(),
 		Config:conf,
 		DB: dataStore,
 		Snk: snyk,
