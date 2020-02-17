@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"github.com/securityclippy/gedb/pkg/db"
 	"github.com/securityclippy/imagemanager/pkg/dockerhub"
 	"github.com/securityclippy/imagemanager/pkg/repositoryreport"
 )

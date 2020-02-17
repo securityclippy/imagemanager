@@ -19,6 +19,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/aquasecurity/trivy/pkg/types"
+	"github.com/aquasecurity/trivy/internal/client"
+	"github.com/aquasecurity/trivy/internal"
 
 )
 
@@ -36,6 +38,16 @@ to quickly create a Cobra application.`,
 		opts := types.ScanOptions{
 			RemoteURL: "127.0.0.1:8081",
 		}
+
+		cc := internal.NewClientCommand()
+
+		a := internal.NewApp("dev")
+		a.
+
+		cliApp :=
+
+		err = client.Run()
+
 		results, err := Mgr.TrivyScanner.ScanImage(imageName, "", opts)
 		if err != nil {
 			Mgr.Log.Fatal(err)

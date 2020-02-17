@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/securityclippy/imagemanager/pkg/registry"
 	"github.com/aquasecurity/fanal/cache"
+	"github.com/securityclippy/imagemanager/pkg/storage"
 	"os"
 	ospkgScanner "github.com/aquasecurity/trivy/pkg/scanner/ospkg"
 
@@ -23,7 +24,6 @@ import (
 
 	//"github.com/segmentio/cloudsec-bot/pkg/bot"
 	"github.com/sirupsen/logrus"
-	"github.com/securityclippy/gedb/pkg/db"
 	"github.com/securityclippy/snyker/pkg/snykclient"
 	"github.com/securityclippy/esc"
 	"sync"
@@ -65,7 +65,7 @@ type Manager struct {
 	Hub *dockerhub.Client
 	//Bot *bot.Bot
 	Config *config.Config
-	DB *db.GEDB
+	DB storage.Storage
 	Snk *snykclient.SnykClient
 	ESC *esc.ESC
 }
