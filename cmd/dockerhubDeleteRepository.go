@@ -34,19 +34,10 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		repo, err := Mgr.Hub.GetRepository(repoName)
+		_, err := Mgr.Hub.GetRepository(repoName)
 		if err != nil {
 			Mgr.Log.Fatal(err)
 		}
-
-		err = Mgr.Hub.DeleteRepository(repo)
-
-		if err != nil {
-			Mgr.Log.Fatal(err)
-		}
-
-		Mgr.Log.Infof("Deleted Repository: %s\n", repo.Name)
-
 	},
 }
 

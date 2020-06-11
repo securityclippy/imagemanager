@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
     "github.com/schollz/progressbar/v2"
 
@@ -40,10 +41,11 @@ to quickly create a Cobra application.`,
 
 		bar := progressbar.New(len(repos))
 		for _, repo := range repos {
+			fmt.Println()
 			bar.Add(1)
 			if repo != nil {
 
-				err := Mgr.CleanDockerhubRepo(repo)
+				err := Mgr.CleanDockerhubRepo(repo, false)
 				if err != nil {
 					Mgr.Log.Error(err)
 				}

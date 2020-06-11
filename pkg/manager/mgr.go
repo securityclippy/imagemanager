@@ -57,7 +57,7 @@ func NewManager(dhUsername, dhPassword, snykToken string, conf *config.Config) *
 		Log:log,
 		ECR:ecrClient,
 		Hub: hub,
-		Bot: bot.NewBetaBot(),
+		Bot: bot.NewBot(conf.SlackChannel, conf.SlackWebhookURL),
 		Config:conf,
 		DB: dataStore,
 		Snk: snyk,

@@ -13,6 +13,7 @@ type RepositoryReport struct {
 	Repository string `json:"repository"`
 	LastPushed time.Time `json:"last_pushed"`
 	LastPulled string `json:"last_pulled"`
+	LastUpdated string `json:"last_updated"`
 	Deprecated bool `json:"deprecated"`
 	DeprecationDate time.Time `json:"deprecation_date"`
 	DeprecationMarkedOn time.Time `json:"deprecation_marked_on"`
@@ -70,7 +71,7 @@ func (rr *RepositoryReport) SetDeprecationDate(cfg *config.Config) {
 
 func (rr *RepositoryReport) SetDeletionDate(cfg *config.Config) {
 	//t := time.Duration(cfg.DeletionThresholdDays * 24) * time.Hour
-	rr.DeletionDate = time.Now().Add(time.Duration(cfg.DeletionWarningDays * 24) * time.Hour)
+	rr.DeletionDate = time.Now().Add(time.Duration(cfg.DeprecationWarningDays * 24) *time.Hour).Add(time.Duration(cfg.DeletionWarningDays * 24) * time.Hour)
 }
 
 func (rr *RepositoryReport) MarkForDeprecation() {
@@ -81,6 +82,7 @@ func New(registry, repository string) *RepositoryReport {
 	return &RepositoryReport{
 		Registry:registry,
 		Repository:repository,
+		LastUpdated: time.Now().Format(time.RFC3339),
 	}
 }
 

@@ -18,12 +18,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var force bool
 
-var verbose bool
-// ecrUpdateCmd represents the ecrUpdate command
-var ecrUpdateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "update ecr images in snyk",
+// cleanDockerhubRepoCmd represents the cleanDockerhubRepo command
+var cleanDockerhubRepoCmd = &cobra.Command{
+	Use:   "clean-repo",
+	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -31,26 +31,32 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := Mgr.UpdateECR(0, 0, threads, verbose)
+
+		repo, err := Mgr.Hub.GetRepository(repoName)
 		if err != nil {
-			log.Fatal(err)
+			Mgr.Log.Fatal(err)
 		}
+		err = Mgr.CleanDockerhubRepo(repo, force)
+		if err != nil {
+			Mgr.Log.Fatal(err)
+		}
+
 	},
 }
 
 func init() {
-	ecrCmd.AddCommand(ecrUpdateCmd)
-	ecrUpdateCmd.Flags().IntVarP(&threads, "threads", "t", 5, "threads")
-	ecrUpdateCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
-
+	dockerhubCmd.AddCommand(cleanDockerhubRepoCmd)
+	cleanDockerhubRepoCmd.Flags().StringVarP(&repoName, "repository", "r", "", "repository to clean up")
+	cleanDockerhubRepoCmd.MarkFlagRequired("repository")
+	cleanDockerhubRepoCmd.Flags().BoolVar(&force, "force", false, "force action")
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// ecrUpdateCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// cleanDockerhubRepoCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// ecrUpdateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// cleanDockerhubRepoCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

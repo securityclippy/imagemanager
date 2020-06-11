@@ -115,6 +115,8 @@ func initConfig() {
 		log.Fatal(err)
 	}
 
+	fmt.Println(conf)
+
 	SNYKTOKEN = os.Getenv("SNYK_TOKEN")
 	DHUSERNAME = os.Getenv("DH_USERNAME")
 	DHPASSWORD = os.Getenv("DH_PASSWORD")

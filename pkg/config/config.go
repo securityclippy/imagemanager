@@ -8,6 +8,7 @@ type Config struct {
 	DeletionThresholdDays int `json:"deletion_threshold_days"`
 	//Slack channel for notifications
 	SlackChannel string `json:"slack_channel"`
+	SlackWebhookURL string `json:"slack_webhook_url"`
 	//amount of days of warning before a repository is deprecated
 	DeprecationWarningDays int `json:"deprecation_warning_days"`
 	DeletionWarningDays int `json:"deletion_warning_days"`

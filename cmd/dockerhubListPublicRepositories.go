@@ -1,4 +1,4 @@
-// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2020 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
-// tagsCmd represents the tags command
-var tagsCmd = &cobra.Command{
-	Use:   "tags",
+// dockerhubListPublicRepositoriesCmd represents the dockerhubListPublicRepositories command
+var dockerhubListPublicRepositoriesCmd = &cobra.Command{
+	Use:   "repositories-public",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -31,20 +31,30 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("tags called")
+
+		repos, err := Mgr.Hub.ListRepositoriesPublic()
+
+
+		js, err := json.MarshalIndent(repos, "", "  ")
+		if err != nil {
+			Mgr.Log.Fatal(err)
+		}
+
+		fmt.Println(string(js))
+
 	},
 }
 
 func init() {
-	listDockerhubCmd.AddCommand(tagsCmd)
+	listDockerhubCmd.AddCommand(dockerhubListPublicRepositoriesCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// tagsCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// dockerhubListPublicRepositoriesCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// tagsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// dockerhubListPublicRepositoriesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

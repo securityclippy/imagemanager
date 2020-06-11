@@ -15,8 +15,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -31,12 +29,23 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("dockerhubDelete called")
+		err := Mgr.Hub.DeleteAllTags(repoName)
+		if err != nil {
+			Mgr.Log.Fatal(err)
+		}
+
+		//err = Mgr.DeleteDockerhubRepository(repoName)
+		//if err != nil {
+			//Mgr.Log.Fatal(err)
+		//}
+
 	},
 }
 
 func init() {
 	dockerhubCmd.AddCommand(dockerhubDeleteCmd)
+	dockerhubDeleteCmd.Flags().StringVarP(&repoName, "repository", "r", "", "repository to delete")
+	dockerhubDeleteCmd.MarkFlagRequired("repository")
 
 	// Here you will define your flags and configuration settings.
 

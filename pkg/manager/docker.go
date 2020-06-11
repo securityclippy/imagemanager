@@ -2,6 +2,7 @@ package manager
 
 import (
 	"fmt"
+	"strings"
 )
 
 const (
@@ -35,9 +36,9 @@ func (m Manager) DockerPull(imageName string, verbose bool) error {
 		imageName,
 	}
 	if verbose {
-		return runCMD("docker", args, []string{"digest", "status"})
+		return runCMD("docker", args, []string{"digest", "status", "done"})
 	}
-	return runCMD("docker", args, []string{"done"})
+	return runCMD("docker", args, []string{"thisstringdoesntexist"})
 }
 
 func (m Manager) DockerPush(image string, verbose bool) error {
@@ -48,7 +49,7 @@ func (m Manager) DockerPush(image string, verbose bool) error {
 	if verbose {
 		return runCMD("docker", pushArgs, nil)
 	}
-	return runCMD(dockerCmd, pushArgs, []string{"done"})
+	return runCMD(dockerCmd, pushArgs, []string{"thisstringdoesntexist"})
 
 }
 
@@ -62,7 +63,7 @@ func (m Manager) DockerTag(oldTag, newTag string, verbose bool) error {
 	if verbose {
 		return runCMD(dockerCmd, args, nil)
 	}
-	return runCMD(dockerCmd, args, []string{"done"})
+	return runCMD(dockerCmd, args, []string{"thisstringdoesntexist"})
 }
 
 func (m Manager) DockerRMI(imageName string) error {
@@ -70,7 +71,7 @@ func (m Manager) DockerRMI(imageName string) error {
 		"rmi",
 		imageName,
 	}
-	return runCMD("docker", args, []string{"status"})
+	return runCMD("docker", args, []string{"thisstringdoesntexist"})
 }
 
 
@@ -88,6 +89,41 @@ func (m Manager) DockerRename(image string, verbose bool) (renamed string, err e
 	}
 
 	return deprecated, nil
+}
+
+func (m Manager) DockerUnDeprecate(repoName, tag string, verbose bool) (undeprecated string, err error) {
+
+
+	taggedImage := fmt.Sprintf("%s:%s", repoName, tag)
+
+	// bail if its not a deprecated tag
+	if !strings.Contains(taggedImage, "__deprecated") {
+		return taggedImage, nil
+	}
+
+	if err := m.DockerPull(taggedImage, verbose); err != nil {
+		return "", err
+	}
+
+	newTag := strings.Split(tag, "__deprecated")[0]
+
+
+	newTaggedImage := fmt.Sprintf("%s:%s", repoName, newTag)
+
+
+	err = m.DockerTag(taggedImage, newTaggedImage, verbose)
+	if err != nil {
+		return "", err
+	}
+
+
+	err = m.DockerPush(newTaggedImage, verbose)
+
+	if err != nil {
+		return "", err
+	}
+
+	return newTaggedImage, nil
 }
 
 func (m Manager) GetManifest(image, tag string) {

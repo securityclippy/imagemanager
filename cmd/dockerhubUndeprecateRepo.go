@@ -1,4 +1,4 @@
-// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2020 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
-var verbose bool
-// ecrUpdateCmd represents the ecrUpdate command
-var ecrUpdateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "update ecr images in snyk",
+// dockerhubUndeprecateRepoCmd represents the dockerhubUndeprecateRepo command
+var dockerhubUndeprecateRepoCmd = &cobra.Command{
+	Use:   "undeprecate-repo",
+	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -31,26 +29,26 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := Mgr.UpdateECR(0, 0, threads, verbose)
-		if err != nil {
-			log.Fatal(err)
+
+		if err := Mgr.UnDeprecateDockerhubRepo(repoName, 5); err != nil {
+			Mgr.Log.Fatal(err)
 		}
+
 	},
 }
 
 func init() {
-	ecrCmd.AddCommand(ecrUpdateCmd)
-	ecrUpdateCmd.Flags().IntVarP(&threads, "threads", "t", 5, "threads")
-	ecrUpdateCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
-
+	dockerhubCmd.AddCommand(dockerhubUndeprecateRepoCmd)
+	dockerhubUndeprecateRepoCmd.Flags().StringVarP(&repoName, "repo", "r", "", "repo name")
+	dockerhubUndeprecateRepoCmd.MarkFlagRequired("repo")
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// ecrUpdateCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// dockerhubUndeprecateRepoCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// ecrUpdateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// dockerhubUndeprecateRepoCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

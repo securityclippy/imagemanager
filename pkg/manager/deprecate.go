@@ -2,12 +2,8 @@ package manager
 
 import (
 	"fmt"
-	"github.com/apex/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/securityclippy/imagemanager/pkg/dockerhub"
-	"strings"
-	"sync"
 )
 
 func (m Manager) Deprecate(imageName string) error {
@@ -62,77 +58,20 @@ func (m Manager) Deprecate(imageName string) error {
 	return nil
 }
 
-func (m Manager) DeprecateDockerhub(imageName string, threads int) error {
-
-	tags, err := m.Hub.ListTags(imageName)
-
-	rlChan := make(chan int, threads)
-	wg := sync.WaitGroup{}
-	tagStream := make(chan *dockerhub.Tag, len(tags))
-	for _, t := range tags {
-		tagStream <- t
-	}
-	close(tagStream)
-
-	//oldImages := []string{}
-	if len(tags) > 0 {
-		for i := 0;  i <= len(tagStream); i++  {
-			rlChan <- i
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				t := <- tagStream
-				if t == nil {
-					<- rlChan
-					return
-				}
-				if strings.ContainsAny(t.Name, "__deprecated") {
-					<- rlChan
-					return
-				}
-				taggedImage := fmt.Sprintf("%s:%s", imageName, t.Name)
-				orgImage := fmt.Sprintf("segment/%s", taggedImage)
-				err = m.DockerPull(orgImage, false)
-				if err != nil {
-					log.Error(err.Error())
-				}
-				_, err = m.DockerRename(orgImage, false)
-				if err != nil {
-					log.Error(err.Error())
-				} else {
-					s := strings.Split(taggedImage, ":")
-					fmt.Printf("deleting tag: %+v\n", s)
-					err = m.Hub.DeleteTag(s[0], s[1])
-					if err != nil {
-						log.Error(err.Error())
-					}
-				}
-
-				//oldImages = append(oldImages, taggedImage)
-				fmt.Printf("deprected: %d/%d tags\r", <-rlChan, len(tags))
-			}()
-		}
-		wg.Wait()
-	}
-
-	project, err := m.Snk.GetProject(fmt.Sprintf("%s/%s", "segment", imageName))
+/*
+func (m *Manager) DockerhubDeleteDeprecated() error {
+	repos, err := m.Hub.ListRepositories()
 	if err != nil {
 		return err
 	}
-
-	err =  m.Snk.DeleteProjectByID(project.ID)
-	if err != nil {
-		return err
+	for _, repo := range repos {
+		tags :=
+		tagStream := make(chan *dockerhub.Tag, )
 	}
-	/*for _, i := range oldImages {
-		s := strings.Split(i, ":")
-		err = m.Hub.DeleteTag(s[0], s[1])
-		if err != nil {
-			return err
-		}
-	}*/
-	return nil
 }
+ */
+
+
 
 //TODO
 //Get Repository
