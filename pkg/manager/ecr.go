@@ -66,7 +66,7 @@ func (m Manager) UpdateECR(start, finish, threads int, verbose bool) error {
 			defer wg.Done()
 			repo := <- repoStream
 
-			err := m.updateECRImage(repo, verbose)
+			err := m.UpdateECRImage(repo, verbose)
 			if err == errNoImages {
 				//m.Bot.Log.Infof("[%s ] No images found. Repo should be deleted\n", *repo.RepositoryName)
 			}
@@ -118,7 +118,7 @@ func (m Manager) DescribeImages(imageIds []*ecr.ImageIdentifier, repo *ecr.Repos
 	}
 }
 
-func (m Manager) updateECRImage(repo *ecr.Repository, verbose bool) error {
+func (m Manager) UpdateECRImage(repo *ecr.Repository, verbose bool) error {
 	images, err := m.DescribeImages(nil, repo)
 	if err != nil {
 		return err
