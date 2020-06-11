@@ -5,7 +5,7 @@ import (
 	"github.com/securityclippy/imagemanager/pkg/config"
 	"github.com/securityclippy/imagemanager/pkg/dockerhub"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
+	//"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/securityclippy/imagemanager/pkg/registry"
 	"github.com/aquasecurity/fanal/cache"
@@ -65,49 +65,43 @@ type Manager struct {
 	Hub *dockerhub.Client
 	//Bot *bot.Bot
 	Config *config.Config
-	DB storage.Storage
+	Storage storage.Storage
 	Snk *snykclient.SnykClient
 	ESC *esc.ESC
 }
 
 
-func NewManager(dhUsername, dhPassword, snykToken string, conf *config.Config) *Manager {
+func NewManager(dhUsername, dhPassword, snykToken string, conf *config.Config, store storage.Storage) *Manager {
 	log := logrus.New()
-	cfg := aws.NewConfig()
-	sess, err := session.NewSession(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//cfg := aws.NewConfig()
+	//sess, err := session.NewSession(cfg)
+	//if err != nil {
+		//log.Fatal(err)
+	//}
 
-	ecrClient := ecr.New(sess)
+	//ecrClient := ecr.New(sess)
 
 	hub := dockerhub.NewClient(dhUsername, dhPassword, "", "")
-	_, err = hub.GetAuthToken()
+	_, err := hub.GetAuthToken()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	snyk, err := snykclient.NewSnykClient(snykToken)
+	//snyk, err := snykclient.NewSnykClient(snykToken)
 	if err != nil {
 		log.Error("could not create snyk client")
 	}
 
-	dataStore, err := db.NewS3("prefix", conf.DatabaseBucket)
-	if err != nil {
-		log.Error("could not connect to DB.  Continuing without db support")
-	}
-
-	esClient := esc.NewAWS(conf.ElasticsearchEndpoint)
+	//esClient := esc.NewAWS(conf.ElasticsearchEndpoint)
 	m := &Manager{
-		TrivyScanner:trivyScanner,
 		Log:log,
-		ECR:ecrClient,
+		//ECR:ecrClient,
 		Hub: hub,
 		//Bot: bot.NewBetaBot(),
 		Config:conf,
-		DB: dataStore,
-		Snk: snyk,
-		ESC:esClient,
+		Storage: store,
+		//Snk: snyk,
+		//ESC:esClient,
 	}
 
 	return m

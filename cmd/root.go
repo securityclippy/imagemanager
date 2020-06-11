@@ -118,6 +118,6 @@ func initConfig() {
 	SNYKTOKEN = os.Getenv("SNYK_TOKEN")
 	DHUSERNAME = os.Getenv("DH_USERNAME")
 	DHPASSWORD = os.Getenv("DH_PASSWORD")
-	Mgr = manager.NewManager(DHUSERNAME, DHPASSWORD, SNYKTOKEN, conf)
+	Mgr = manager.NewManager(DHUSERNAME, DHPASSWORD, SNYKTOKEN, conf, nil)
 
 }

@@ -3,6 +3,7 @@ package manager
 import (
 	"github.com/securityclippy/imagemanager/pkg/dockerhub"
 	"github.com/securityclippy/imagemanager/pkg/repositoryreport"
+	"github.com/securityclippy/imagemanager/pkg/storage"
 )
 
 // repo -> check for entry in DB.
@@ -13,7 +14,7 @@ func (m *Manager) CleanDockerhubRepo(repo *dockerhub.Repository) error {
 
 	// load existing repo report or create new one
 	rr, err := m.loadReport(repo.Namespace, repo.Name)
-	if err == db.ErrKeyNotFound {
+	if err == storage.ErrKeyNotFound {
 		rr = repositoryreport.NewDockerHub(repo, m.Config)
 		err = m.saveReport(repo.Namespace, repo.Name, rr)
 		if err != nil {

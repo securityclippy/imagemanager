@@ -16,12 +16,9 @@ package cmd
 
 import (
 	"fmt"
-
+	"github.com/aquasecurity/trivy/pkg/app"
 	"github.com/spf13/cobra"
-	"github.com/aquasecurity/trivy/pkg/types"
-	"github.com/aquasecurity/trivy/internal/client"
-	"github.com/aquasecurity/trivy/internal"
-
+	"github.com/urfave/cli"
 )
 
 // scanImageCmd represents the scanImage command
@@ -35,26 +32,32 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		opts := types.ScanOptions{
-			RemoteURL: "127.0.0.1:8081",
-		}
 
-		cc := internal.NewClientCommand()
+		trivyApp := app.NewApp("dev")
 
-		a := internal.NewApp("dev")
-		a.
+		fmt.Println(trivyApp.Version)
 
-		cliApp :=
+		//test := []string{"--client", " --remote", "alpine:3.10"}
+			//" --remote http://localhost:8080", "alpine:3.10"}
+		/*cliargs := []string{
+			"client",
+			" --remote",
+			"http://localhost:8081",
+			"alpine:3.10",
+		}*/
 
-		err = client.Run()
+		cCmd := app.NewClientCommand()
+		err := cCmd.Run(&cli.Context{})
 
-		results, err := Mgr.TrivyScanner.ScanImage(imageName, "", opts)
+		trivyApp.Commands[0].Run()
+
+		//err := trivyApp.Run(cCmd)
+
+
 		if err != nil {
-			Mgr.Log.Fatal(err)
+			log.Fatal(err)
 		}
 
-		fmt.Println(results)
-		fmt.Println("scanImage called")
 	},
 }
 
